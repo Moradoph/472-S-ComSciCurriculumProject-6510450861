@@ -13,6 +13,15 @@ jobs:
   test-and-build-develop:
     runs-on: ubuntu-latest
 
+    services:
+      db:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        ports:
+          - 3306:3306
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,10 +34,10 @@ jobs:
       - name: Copy environment
         run: cp .env.example ./backend/.env
 
-      - name: Run docker compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-        with:
-          compose-file: "./Docker-compose.yml"
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          sleep 30
 
       - name: Install dependencies
         working-directory: ./backend
