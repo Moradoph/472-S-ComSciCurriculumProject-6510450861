@@ -32,12 +32,17 @@ jobs:
           python-version: '3.11'
  
       - name: Copy environment
-        run: cp .env.example ./backend/.env
+        run: |
+          echo "DB_HOST=localhost" >> ./backend/.env
+          echo "DB_PORT=3306" >> ./backend/.env
+          echo "DB_USER=root" >> ./backend/.env
+          echo "DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> ./backend/.env
+          echo "DB_NAME=${{ secrets.MYSQL_DATABASE }}" >> ./backend/.env
 
       - name: Wait for services to be ready
         run: |
           echo "Waiting for MySQL to be ready..."
-          sleep 30
+          sleep 10
 
       - name: Install dependencies
         working-directory: ./backend
@@ -49,7 +54,7 @@ jobs:
         working-directory: ./backend
         run: |
           python manage.py migrate
-          
+
       - name: Run tests
         working-directory: ./backend
         run: |
