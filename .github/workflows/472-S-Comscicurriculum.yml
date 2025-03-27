@@ -22,7 +22,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -p 1234"
+          --health-cmd="mysqladmin ping -h localhost"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -31,13 +31,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
- 
-      - name: Copy environment
-        run: cp .env.example ./backend/.env
+      - name: MySQL
+        run: sudo apt-get install -y mysql-client
 
       - name: Wait for MySQL to be ready
         run: |
@@ -49,6 +44,15 @@ jobs:
             echo "Waiting for MySQL..."
             sleep 5
           done
+          
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+ 
+      - name: Copy environment
+        run: cp .env.example ./backend/.env
+
 
       - name: Install dependencies
         working-directory: ./backend
