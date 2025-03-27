@@ -17,11 +17,16 @@ jobs:
       db:
         image: mysql:latest
         env:
-          MYSQL_ROOT_PASSWORD: 1234
-          MYSQL_DATABASE: cs_curriculum
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
         ports:
           - 3306:3306
-
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+          
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,17 +37,18 @@ jobs:
           python-version: '3.11'
  
       - name: Copy environment
-        run: |
-          echo "DB_HOST=localhost" >> ./backend/.env
-          echo "DB_PORT=3306" >> ./backend/.env
-          echo "DB_USER=root" >> ./backend/.env
-          echo "DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> ./backend/.env
-          echo "DB_NAME=${{ secrets.MYSQL_DATABASE }}" >> ./backend/.env
+        run: cp .env.example ./backend/.env
 
-      - name: Wait for services to be ready
+      - name: Wait for MySQL to be ready
         run: |
-          echo "Waiting for MySQL to be ready..."
-          sleep 10
+          for i in {1..10}; do
+            if mysqladmin ping -h localhost -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }} --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 5
+          done
 
       - name: Install dependencies
         working-directory: ./backend
