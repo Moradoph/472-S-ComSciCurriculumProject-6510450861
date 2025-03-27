@@ -1,0 +1,66 @@
+name: deploy production
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  APP_NAME: cs_curriculum
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Github Release tag
+        id: tag
+        run: |
+          TAG_NAME=v1.0.${{ github.run_number }}
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          echo "$TAG_NAME"
+
+      - name: Push Tagged Docker Image
+        uses: softprops/github-release-action@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: Release ${{ env.TAG_NAME }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v5
+        with:
+          context: .backend
+          file: backend/Dockerfile
+          push: true
+          platform: linux/amd64,linux/arm64
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}_backend:${{ env.TAG_NAME }}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v5
+        with:
+          context: .frontend
+          file: frontend/Dockerfile
+          push: true
+          platform: linux/amd64,linux/arm64
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}_frontend:${{ env.TAG_NAME }}
+        
+

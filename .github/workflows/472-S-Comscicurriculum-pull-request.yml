@@ -1,0 +1,89 @@
+name: pull-request
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+env:
+  APP_NAME: cs_curriculum
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}                         
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+          
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: MySQL
+        run: sudo apt-get install -y mysql-client
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+ 
+      - name: Copy environment
+        run: cp .env.example ./backend/.env
+
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirement.txt
+
+      - name: Migrate database
+        working-directory: ./backend
+        run: |
+          python manage.py migrate
+
+      - name: Run tests
+        working-directory: ./backend
+        run: |
+          if [ -f pytest.ini ]; then
+            pytest
+          else
+            echo "ไม่มี UAT/Unit Testing"
+          fi
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker image with BuildX
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}_backend:develop
+          cahche-from: type=gha
+          cahche-to: type=gha, mode=max
+
+      - name: Build Frontend Docker image with BuildX
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}_frontend:develop
+          cache-from: type=gha
+          cache-to: type=gha, mode=max
