@@ -76,11 +76,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image with BuildX
+      - name: Build Backend Docker image with BuildX
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./backend
+          file: ./backend/Dockerfile
           push: false
           tags: ${{ secrets.DOCKER_USERNAME }}/cs-curriculum:develop
           cahche-from: type=gha
           cahche-to: type=gha, mode=max
+
+      - name: Build Frontend Docker image with BuildX
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: ${{ secrets.DOCKER_USERNAME }}/cs-curriculum-frontend:develop
+          cache-from: type=gha
+          cache-to: type=gha, mode=max
