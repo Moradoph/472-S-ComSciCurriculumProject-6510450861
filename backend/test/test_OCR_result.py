@@ -28,8 +28,9 @@ class OCRResult(TestCase):
         print("activity status: ", self.ocr.get_studentId_activity(self.activity_text, "6510450861"))
         
     def test_student_info(self):
-        print(self.ocr.get_student_info(self.grade_text))
-    
+        st_info = self.ocr.get_student_info(self.grade_text)
+        self.assertEqual(st_info["id"], "5510200019")
+        
     def test_is_valid_transcript(self):
         print(self.ocr.is_valid_transcript(self.grade_text))
         
