@@ -21,15 +21,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+ 
+      - name: Copy environment
+        run: cp .env.example ./backend/.env
 
       - name: Run docker compose
         uses: hoverkraft-tech/compose-action@v2.0.1
         with:
           compose-file: "./Docker-compose.yml"
 
-      - name: Copy environment
-        run: cp .env.example ./backend/.env
-        
       - name: Install dependencies
         working-directory: ./backend
         run: |
