@@ -25,10 +25,10 @@ jobs:
       - name: Copy environment
         run: cp .env.example ./backend/.env
 
-      - name: Run docker compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-        with:
-          compose-file: "./Docker-compose.yml"
+      # - name: Run docker compose
+      #   uses: hoverkraft-tech/compose-action@v2.0.1
+      #   with:
+      #     compose-file: "./Docker-compose.yml"
 
       - name: Install dependencies
         working-directory: ./backend
@@ -40,7 +40,7 @@ jobs:
         working-directory: ./backend
         run: |
           if [ -f pytest.ini ]; then
-            pytest backend
+            pytest
           else
             echo "ไม่มี UAT/Unit Testing"
           fi
