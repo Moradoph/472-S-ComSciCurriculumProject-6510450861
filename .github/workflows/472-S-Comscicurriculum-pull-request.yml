@@ -8,6 +8,9 @@ on:
     branches:
       - develop
 
+env:
+  APP_NAME: cs_curriculum
+
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -32,17 +35,6 @@ jobs:
 
       - name: MySQL
         run: sudo apt-get install -y mysql-client
-
-      - name: Wait for MySQL to be ready
-        run: |
-          for i in {1..10}; do
-            if mysqladmin ping -h localhost -u root -p ${{ secrets.MYSQL_ROOT_PASSWORD }} --silent; then
-              echo "MySQL is ready!"
-              break
-            fi
-            echo "Waiting for MySQL..."
-            sleep 3
-          done
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -82,7 +74,7 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: false
-          tags: ${{ secrets.DOCKER_USERNAME }}/cs-curriculum:develop
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}_backend:develop
           cahche-from: type=gha
           cahche-to: type=gha, mode=max
 
@@ -92,6 +84,6 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: false
-          tags: ${{ secrets.DOCKER_USERNAME }}/cs-curriculum-frontend:develop
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}_frontend:develop
           cache-from: type=gha
           cache-to: type=gha, mode=max
