@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      db:
+      mysql:
         image: mysql:latest
         env:
           MYSQL_ROOT_PASSWORD: 1234
@@ -44,7 +44,7 @@ jobs:
             echo "Waiting for MySQL..."
             sleep 5
           done
-          
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
